@@ -59,6 +59,16 @@ Bruk iOS Data Protection og ekskluder prototypeopptak fra backup. Appen har inge
 
 Test i et kontrollert miljø, ikke ved jernbanesporet. Opptak av andre personer krever riktig grunnlag. Feltbruk krever godkjenningene og prosedyrene i hovedplanen.
 
+### Cyberrisiko fra første versjon
+
+Hovedplanens høyrisikopremiss gjelder også læringsappen, uten å utvide omfanget til Azure. Før implementering beskrives trusler mot telefon, opptak, metadata, utviklingsmaskin og Git. Bruk en telefon med enhetskode og ufølsomme testopptak frem til lokale sikkerhetskontroller er verifisert.
+
+For forgrunnsappen skal lyd og metadata bruke komplett filbeskyttelse (`NSFileProtectionComplete`). Kontroller at lagring og kontrollert stopp ved låsing fungerer med dette; en fil som ikke kan ferdigstilles må gi synlig feil, ikke svakere beskyttelse i stillhet. Verifiser backup-ekskludering for begge datatyper, begrens lokal lagringsbruk og hindre at filreferanser peker utenfor appens opptaksområde. Manglende plass gir eksplisitt feil, ikke sletting av tidligere opptak.
+
+Appen får aldri Azure-/Foundry-nøkler eller tilgang til Azure Key Vault. Key Vault brukes i den senere backenden. Ved senere innlogging brukes PKCE uten klienthemmelighet; nødvendige lokale tokener lagres i Keychain med bevisst valgt tilgangsklasse. Den første lokale versjonen trenger ingen autentiseringstokener.
+
+Ingen rålyd eller sensitive metadata skal inn i Git, logger, analyseverktøy eller CI-artefakter. Før bruk med reelle data kreves kontroll av faktisk filbeskyttelse, backup, mikrofontillatelse, avbrudd og logger på fysisk iPhone.
+
 ## Tilstander og feil
 
 Tilstander som klar, ber om mikrofontilgang, tar opp, lagrer, spiller av og feil styrer knappene. Bekreft returverdier, delegates og feil fra lyd-/fil-API-er før UI viser suksess.
@@ -104,6 +114,9 @@ Opprett og del Xcode-prosjektfiler og nødvendige shared schemes i Git. Ikke ver
 - Nektet mikrofontilgang og senere endring i Innstillinger håndteres.
 - Bakgrunn, skjermlås og lydavbrudd gir kontrollert stopp og synlig status.
 - Feil i lagring, metadata og lydfiler gir ingen falsk suksess eller stille tap av tidligere opptak.
+- Lyd og metadata har komplett filbeskyttelse og backup-ekskludering; låsing testes på fysisk telefon.
+- Ugyldige filreferanser avvises, lokal lagringsgrense gir synlig feil, og logger inneholder ikke sensitive opptaksdata.
+- Appen inneholder ingen tjenestenøkler og gjør ingen kall til Key Vault, Azure eller Foundry i lokalversjonen.
 
 Ved implementering brukes målrettede tester av metadata/lagring og tilstandsoverganger, Xcode-build og manuell lydtest på fysisk telefon. Denne dokumentasjonsleveransen krever ingen app-build.
 

@@ -4,6 +4,8 @@
 
 Systemet skal legge grunnlaget for prediktivt vedlikehold gjennom standardiserte lydopptak av togpasseringer, sporbar analyse og faglig vurdering. Første versjon er en datainnsamlings- og avvikspilot, ikke et validert system for feilprediksjon, sikkerhetsvurdering eller beregning av gjenværende levetid.
 
+Prosjektet skal designes for et høyt cyberrisikonivå fra starten. Dette er et konservativt designpremiss, ikke en målt risikoscore eller påstand om konkrete sårbarheter. Konfidensialitet, integritet og tilgjengelighet vurderes før funksjoner aktiveres, ikke som et tillegg etter feltpiloten.
+
 Dette er et designforslag, ikke en bestilling av implementering. Avgrensningene nedenfor er bekreftet i intervjuet. Detaljerte tjenestevalg og kontrakter er forslag som skal verifiseres før utvikling. Repoet inneholder planer og dokumentasjon, men ingen eksisterende app eller backend å tilpasse.
 
 Første dokumentasjonsleveranse etablerte `plan-predmaint.md` og `.gitignore`. Neste etappe etablerer `front-end/` og `back-end/`, med en egen plan for en lokal opptaksapp. App og backend skal ikke implementeres uten en ny bestilling.
@@ -39,6 +41,8 @@ Frontend-dokumentasjon ligger i `front-end/`, med senere Xcode-prosjekt under `f
 | Backend | Azure, med separat API, lagring, kø og analysearbeider |
 | Backend-språk | Python |
 | Python-miljø | uv for avhengigheter, låsefil og prosjektlokalt virtuelt miljø |
+| Cyberrisiko | Høyrisikopremiss, eksplisitt trusselmodell og sikkerhetsporter |
+| Hemmelighetshåndtering | Azure Key Vault i backend og Managed Identity; ingen backendhemmeligheter i appen |
 | Modell | Foundry-katalogen kan brukes uavhengig av utgiver, etter egnethetskontroll |
 | Geografi | Godkjent EU/EØS-behandling; ingen global modellruting |
 | Oppbevaring | Forslag om 90 dager for rålyd, med særskilt godkjenning for datasett |
@@ -62,9 +66,11 @@ flowchart LR
     APP --> API[Azure API]
     APP -->|Kortlivet opplastingstillatelse| BLOB[Azure Blob Storage]
     API --> DB[Metadata og vurderinger]
+    API -->|Managed Identity| VAULT[Azure Key Vault]
     API -->|Bekreftet opplasting| QUEUE[Azure Service Bus]
     QUEUE --> WORKER[Analysearbeider]
     WORKER --> BLOB
+    WORKER -->|Managed Identity| VAULT
     WORKER --> QC[Kvalitetskontroll og lydbehandling]
     QC --> MODEL[Godkjent modell i Microsoft Foundry]
     MODEL --> WORKER
@@ -81,7 +87,7 @@ Foreslått enkel Azure-realisering:
 - Service Bus for jobber, kontrollert retry og dead-letter-kø.
 - Azure SQL Database for relasjoner, status, analyseversjoner og faglige vurderinger.
 - Microsoft Foundry for den evaluerte modellens endepunkt.
-- Managed Identity og rollebasert tjenestetilgang; Key Vault kun for hemmeligheter som ikke kan erstattes med identitetsbasert tilgang.
+- Azure Key Vault som obligatorisk sikkerhetskomponent i backendmiljøene. Managed Identity foretrekkes fremfor tjenestenøkler; nødvendige hemmeligheter og sertifikater forvaltes i vaulten.
 - Azure Monitor/Application Insights for tekniske målinger og alarmer. Ikke logg rålyd, tilgangstokener eller kortlivede lagringslenker.
 
 Backend bygges i Python. API og arbeider kan starte i samme kodebase, men kjøres som separate prosesser. uv brukes til å administrere Python-versjon, prosjektlokalt virtuelt miljø og avhengigheter.
@@ -242,17 +248,57 @@ Entra ID begrenses til organisasjonens tenant. Backend håndhever operatør-/fag
 
 ### Konkrete cybersikkerhetskrav
 
+Prosjektets trusselmodell beskriver verdier, aktører, angrepsflater og tillitsgrenser for hver etappe. Telefon og opplastet innhold behandles som upålitelig fra backendens perspektiv. Registrer konsekvens, sannsynlighet, tiltak, risikoeier og restrisiko; faglig godkjenning av restrisiko kreves før feltbruk.
+
+| Risikoscenario | Krav fra starten |
+|---|---|
+| Mistet telefon og lekkede opptak | Enhetskode, Data Protection, minst mulig data, kontrollert backup og oppbevaring |
+| Stjålet konto eller tilgang til andres opptak | MFA, tenant-/tokenvalidering, minste privilegium og objektbaserte tilgangstester |
+| Falske opptak, replay eller feil togkobling | Validering, idempotens, kilde-/identitetssporbarhet og historikk |
+| Ondsinnet lyd eller ressursmisbruk | Isolert dekoding, størrelses-/tids-/ressursgrenser og kostnadsgrenser |
+| Lekkede hemmeligheter | Key Vault, separate identiteter, rotasjon, tilgangslogger og tilbakekalling |
+| Upålitelig modellrespons | Validert output, menneskelig vurdering og ingen operative modellverktøy |
+| Kompromittert repo eller byggkjede | Review, beskyttet hovedbranch, skanning og federert CI-identitet |
+| Driftsstans, sletting eller tilgangstap | Overvåking, hendelsesansvar, gjenoppretting og synlige feiltilstander |
+
+En sjekksum kontrollerer innholdsintegritet, men beviser ikke at lyd, tidspunkt eller togidentitet er autentisk. Modellresultater er ikke sikkerhetsbevis. Ingen kobling til togstyring inngår.
+
 - API-et validerer Entra-tokenets signatur, utsteder, tenant, audience, gyldighet og roller med vedlikeholdte biblioteker. Bruk minste privilegium for mennesker og tjenesteidentiteter; MFA og enhetspolicy håndheves gjennom organisasjonens Entra-policy.
 - All ekstern kommunikasjon bruker TLS. Lagring er kryptert; produksjons- og utviklingsdata holdes adskilt. Lagring, database og modellendepunkt får private nettverksforbindelser der tjenestene støtter det. Mobil opplasting må ha en eksplisitt godkjent inngang: kortlivet, avgrenset SAS til offentlig tilgjengelig lagringsendepunkt med anonym tilgang deaktivert, eller opplasting via API. Ikke lov direkte mobilopplasting til et rent privat endepunkt.
 - Begrens requeststørrelse, opplastingsvolum, samtidighet og kallrate. Kontroller filen ved dekoding, ikke bare filnavn eller MIME-type. Lyddekoding skjer med CPU-/minne-/tidsgrenser og vedlikeholdte biblioteker. Ikke bruk brukerinput til shellkommandoer eller filbaner.
 - Bruk parameteriserte databasespørringer, validerte kontrakter og objektbasert autorisasjon for å forebygge injeksjon og uautorisert datatilgang. Bruk UUID-er som identifikatorer, men aldri som erstatning for adgangskontroll.
-- Hemmeligheter lagres ikke i kildekode, Git, app eller logger. Managed Identity foretrekkes; nødvendige nøkler lagres i Key Vault og roteres. En lokal `.env` ignoreres, men eventuelle lekkede hemmeligheter må fortsatt tilbakekalles.
+- Hemmeligheter håndteres etter Key Vault-kravene nedenfor, aldri i kildekode, Git, app eller logger. En ignorert `.env` erstatter ikke vaulten; lekkede hemmeligheter tilbakekalles.
 - Containerne kjører som ikke-root med minst mulig image og rettigheter. Avhengigheter låses med uv, sikkerhetsoppdateringer vurderes løpende, og CI får avhengighets-/hemmelighetsskanning før produksjonsbruk.
 - CI/CD bruker kortlivet federert identitet fremfor langsiktige Azure-nøkler. Beskyttelse av hovedbranch og krav om review/statuskontroller anbefales, men endring av repoets innstillinger inngår ikke i denne dokumentasjonsleveransen.
 - Logg tilgangsendringer, analysefeil og administrative handlinger uten rålyd eller sensitive tilgangsdata. Definer alarmer, ansvar for hendelser og håndtering av sikkerhetsbrudd. Restore-prosedyre prøves mot godkjente backup- og slettefrister.
 - Modellinput regnes som upålitelig innhold. Modellen har ingen verktøy eller rettighet til å ta operative beslutninger; output valideres før lagring og visning.
 
 Dette er designkrav og anbefalinger, ikke en gjennomført sikkerhetsrevisjon eller påstand om at en implementering er sikker.
+
+### Azure Key Vault og identiteter
+
+Azure Key Vault etableres med backenden, før reelle tjenestehemmeligheter brukes. Opprett separate vaults for utvikling/test og produksjon i godkjente regioner. Produksjonshemmeligheter skal aldri kopieres til utviklingsmiljøet. Vaulten lagrer nødvendige hemmeligheter og sertifikater, ikke lyd eller treningsdata.
+
+- Bruk Azure RBAC og dedikerte Managed Identities for API og analysearbeider. Gi bare nødvendig lesetilgang til aktuelle hemmeligheter. Kjørende tjenester får ingen rett til å opprette, slette eller administrere vaulten. Administrativ tilgang bruker MFA og tidsbegrenset privilegert tilgang.
+- Bruk Private Endpoint med privat DNS og deaktiver offentlig nettverkstilgang til vaulten. CI og administratorer må ha godkjente nettverksveier; ikke åpne vaulten for alle for å få bygg eller drift til å fungere.
+- Aktiver soft delete, purge protection og diagnostikk. Varsle om uventet tilgang, gjentatte avslag, rettighetsendringer og slettingsforsøk. Logg aldri hemmelighetsverdier.
+- Foretrekk identitetsbasert autentisering til Foundry, lagring, kø og database der støttet. Ikke opprett unødvendige nøkler bare fordi en vault finnes. Nødvendige nøkler og private sertifikater får eier, rotasjonsfrist og tilbakekallingsprosedyre.
+- Python-backend bruker Azure SDK og eksplisitt Managed Identity i Azure. Lokal utvikling bruker godkjent utvikleridentitet og kun utviklingsvault; ingen automatisk fallback til delte produksjonsnøkler. Tester bruker syntetiske verdier.
+- Ikke bygg hemmeligheter inn i images, Git, CI-artefakter eller appkonfigurasjon. Eventuell minnecache har definert levetid og støtte for rotasjon. Tilgangstap eller utilgjengelig vault gir synlig feil for hemmelighetsavhengig arbeid, aldri hardkodet fallback eller svakere autentisering.
+
+iPhone-appen har ingen direkte tilgang til Key Vault eller backendens nøkler. Ved senere innlogging brukes standard mobilinnlogging med PKCE uten klienthemmelighet; autentiseringstokener håndteres i iOS Keychain. Offline-opptak fungerer uavhengig av vaulten.
+
+Kundeadministrerte krypteringsnøkler vurderes separat ut fra krav og tjenestestøtte. De innføres ikke automatisk: eierskap, rotasjon og gjenoppretting må være avklart, fordi tap av nøkler kan gjøre data utilgjengelige.
+
+### Sikkerhetsporter før videreføring
+
+Før læringsappen bruker reelle opptak, verifiseres filbeskyttelse for lyd og metadata, backup-ekskludering, låsing/bakgrunn, tillatelser og fravær av sensitive logger. Bruk kontrollerte, ufølsomme testopptak til kontrollene er gjennomført.
+
+Før backend integreres, kontrolleres infrastruktur som kode og policy for vault, nettverk og RBAC. Test at riktig identitet får nødvendig tilgang, at feil identitet og offentlig nettverk nektes, og at rotasjon, tilgangstap og gjenoppretting håndteres uten lekkasje.
+
+Før feltpilot kreves dokumenterte tilgangstester, fil-/ressursgrenser, replay-/duplikathåndtering, skanning, alarmer, hendelsesrutiner og restore-prøve, samt uavhengig sikkerhetsgjennomgang. Uavklarte høye/kritiske risikoer krever tiltak eller eksplisitt godkjent restrisiko. Lovlig databehandling og godkjent modellregion er egne porter.
+
+### Personvern og sletting
 
 Lyd kan inneholde tale og andre personopplysninger. Før feltpilot må behandlingsansvarlig godkjenne formål, lovlig grunnlag, informasjon, databehandlerforhold og behov for personvernkonsekvensvurdering. EU/EØS-lokasjon alene er ikke GDPR-godkjenning.
 
@@ -268,7 +314,7 @@ Ved 200 maksimale opptak per dag gir foreslått PCM-format omtrent 2,30 GB råly
 
 Månedskostnad estimeres etter valgt region og modell:
 
-`lagring + lagringstransaksjoner + nettverk + API/arbeider + database + kø + overvåking + modellforbruk`
+`lagring + lagringstransaksjoner + nettverk/private endepunkter + API/arbeider + database + kø + Key Vault + overvåking/sikkerhetskontroller + modellforbruk`
 
 Modellforbruk beregnes fra faktisk antall klipp/segmenter og modellens faktureringsenhet. Retry og reanalyse er med i regnestykket. Maksimal samtidighet, kvoter, kostnadsvarsler og en administrativ stopp for modellkjøring skal hindre ukontrollert forbruk. Ingen kostnadsbeløp oppgis før priser og forbruk er verifisert.
 
@@ -289,8 +335,8 @@ Reell trendanalyse for et lager krever stabil komponentidentitet og gjentatte ob
 1. Git-versjonere designgrunnlaget: opprette `plan-predmaint.md` og `.gitignore` i prosjektroten, kontrollere diff, committe kun disse og pushe til eksisterende feature-branch på `origin`. Verifisere fjerncommit. Bruke prosjektfilen som hoveddokument og committe/pushe hver videre planrevisjon separat. Ingen app/backend uten ny bestilling.
 2. Verifisere modell og databehandling: kandidat, endpoint, format, region, vilkår, kvote, pris og representative lydtester.
 3. Godkjenne felt- og personvernrammer: opptaksprosedyre, sikkerhet, tilgang, lagringsfrister og datasettformål.
-4. Fastsette pilotkontrakter: lydformat, kvalitetsgrenser, API, statuser, feil, datastruktur og målbare evalueringskriterier.
-5. Bygge en avgrenset vertikal prototype hvis bestilt: Python-backend med uv, Swift-app, offline-kø, verifisert opplasting, analyse, status, faglig vurdering og dokumenterte sikkerhetskrav.
+4. Fastsette pilotkontrakter og trusselmodell: lydformat, kvalitetsgrenser, API, statuser, datastruktur, risikoeiere og sikkerhets-/evalueringsporter.
+5. Bygge en avgrenset vertikal prototype hvis bestilt: Python/uv, Key Vault og Managed Identity fra første backendetappe, Swift-app, offline-kø, opplasting, analyse og faglig vurdering.
 6. Evaluere piloten og beslutte videreføring: robusthet, kostnad, faglig samsvar og grunnlag for spesialisert modell.
 
 Todo 2 og 3 er uavhengige. Todo 4 bygger på 2 og 3. Todo 5 bygger på 4 og en eksplisitt implementeringsbestilling. Todo 6 bygger på 5. Publisering av designet trenger ikke vente på at beslutningsportene er løst; de skal stå som åpne.
