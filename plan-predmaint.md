@@ -6,9 +6,9 @@ Systemet skal legge grunnlaget for prediktivt vedlikehold gjennom standardiserte
 
 Prosjektet skal designes for et høyt cyberrisikonivå fra starten. Dette er et konservativt designpremiss, ikke en målt risikoscore eller påstand om konkrete sårbarheter. Konfidensialitet, integritet og tilgjengelighet vurderes før funksjoner aktiveres, ikke som et tillegg etter feltpiloten.
 
-Dette er et designforslag, ikke en bestilling av implementering. Avgrensningene nedenfor er bekreftet i intervjuet. Detaljerte tjenestevalg og kontrakter er forslag som skal verifiseres før utvikling. Repoet inneholder planer og dokumentasjon, men ingen eksisterende app eller backend å tilpasse.
+Dette er et designforslag. Avgrensningene nedenfor er bekreftet i intervjuet. Detaljerte tjenestevalg og kontrakter er forslag som skal verifiseres før utvikling. Den lokale iPhone-prototypen er implementert etter separat bestilling; full iOS-build og fysisk telefonverifikasjon gjenstår. Ingen backend er implementert.
 
-Første dokumentasjonsleveranse etablerte `plan-predmaint.md` og `.gitignore`. Neste etappe etablerer `front-end/` og `back-end/`, med en egen plan for en lokal opptaksapp. App og backend skal ikke implementeres uten en ny bestilling.
+Første dokumentasjonsleveranse etablerte `plan-predmaint.md` og `.gitignore`. Repoet har nå `front-end/` og `back-end/`, egen app-plan og lokal prototype under `front-end/ios/`. Se [kjøreveiledning og verifikasjonsstatus](front-end/ios/README.md). Azure-/Foundry-integrasjon krever fortsatt en ny bestilling.
 
 `plan-predmaint.md` i repoet er hoveddokumentet for designet. Videre avklarte planrevisjoner skal gjøres her, få egne beskrivende commits og pushes til samme feature-branch. Sesjonsplaner er bare arbeids-/godkjenningsartefakter. Repoets `origin` er `https://github.com/arrwno/predmaint.git`; planen publiseres ikke direkte til `main`.
 
@@ -100,7 +100,7 @@ Bruk `uv sync --locked` for å opprette/synkronisere miljøet fra låsefilen, og
 
 ## Git, .gitignore og publisering
 
-Dokumentasjonsleveransen inkluderer hovedplanen, frontend-planen, README-filer for begge delene og nødvendige ignore-regler. Ingen app eller backend er implementert. Planene versjoneres og publiseres med Git.
+Hovedplan, frontend-plan, kildekode og README-filer versjoneres med Git. Den lokale prototypen er implementert; backend er ikke implementert. Lyddata, personlige Xcode-filer og byggeartefakter holdes utenfor Git.
 
 ### Sporbar planutvikling
 

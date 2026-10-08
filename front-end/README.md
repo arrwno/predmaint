@@ -6,6 +6,6 @@ Start med [planen for den lokale opptaksappen](plan-iphone.md). Den beskriver en
 
 Den godkjente [samlede planen for repo-struktur og første lokale iPhone-app](plan-repo-struktur-og-iphone.md) er også bevart her som planleggingsgrunnlag.
 
-Et senere Xcode-prosjekt skal ligge i `ios/`. Det er ikke opprettet ennå. Ikke opprett et eget Git-repo inne i denne katalogen.
+Den lokale prototypen ligger i `ios/Predmaint.xcodeproj`. Se [kjøreveiledning og verifikasjonsstatus](ios/README.md) før bruk. Fullt iOS-bygg og fysisk telefonkontroll gjenstår; ikke bruk sensitive feltopptak ennå. Ikke opprett et eget Git-repo inne i denne katalogen.
 
 Se [hovedplanen](../plan-predmaint.md) for den langsiktige løsningen. Lokale opptak eller datasett på utviklingsmaskinen skal ligge i `local-data/`, som ignoreres av Git.

@@ -14,6 +14,8 @@ coverage.xml
 build/
 dist/
 *.egg-info/
+.build/
+.swiftpm/
 
 # Local configuration and secrets; examples must contain placeholders only
 .env

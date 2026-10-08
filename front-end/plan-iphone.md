@@ -8,13 +8,13 @@ Appen skal kunne starte og stoppe opptak, vise lagrede opptak og spille dem av u
 
 Utenfor første versjon: Azure, Foundry, innlogging, opplasting, bakgrunnsopptak, deling, eksport, redigering, avansert bølgeform, automatisk sletting og feltmetadata. Dette er en læringsapp, ikke en operativ feltpilot.
 
-Denne leveransen oppretter bare struktur og dokumentasjon. Implementering av appen krever en ny bestilling. [Hovedplanen](../plan-predmaint.md) beskriver den langsiktige løsningen.
+Den lokale prototypen er nå implementert etter egen bestilling, med kildekode og Xcode-prosjekt under `ios/`. Se [kjøreveiledningen](ios/README.md) for status: lagringskontroller består på macOS, men full iOS-build og fysisk telefonkontroll gjenstår fordi full Xcode ikke var tilgjengelig. Appen er ikke godkjent for sensitive feltopptak. [Hovedplanen](../plan-predmaint.md) beskriver den langsiktige løsningen.
 
 ## Teknologi og prosjektstruktur
 
 Bruk Swift, SwiftUI og AVFoundation uten tredjepartsbiblioteker. Foreslått minimum er iOS 17 for moderne mikrofontillatelses-API; bekreft dette mot testtelefon og Xcode før implementering.
 
-Et senere Xcode-prosjekt skal ligge i `front-end/ios/`. Hold første utforming liten:
+Xcode-prosjektet ligger i `front-end/ios/`. Hold første utforming liten:
 
 | Del | Ansvar |
 |---|---|
@@ -88,7 +88,7 @@ Tilstander som klar, ber om mikrofontilgang, tar opp, lagrer, spiller av og feil
 Swift er programmeringsspråket, SwiftUI bygger skjermene, og AVFoundation håndterer lyd. Xcode er utviklingsverktøyet. Et target beskriver hva som bygges; bundle identifier identifiserer appen, og signing gjør at den kan kjøres på enheten. Simulatoren etterligner en iPhone, men erstatter ikke fysisk lydtesting.
 
 1. Installer Xcode på en kompatibel Mac og fullfør førstegangsoppsettet. Kontroller Xcode-/iOS-kompatibilitet mot testtelefonen.
-2. Opprett et iOS App-prosjekt med Swift og SwiftUI under `front-end/ios/`. Unngå et eget nestet Git-repo dersom veiviseren tilbyr det.
+2. Åpne det eksisterende prosjektet `front-end/ios/Predmaint.xcodeproj`; ikke opprett et nytt eller et nestet Git-repo.
 3. Velg en unik bundle identifier og team under Signing & Capabilities. En Apple Account/Personal Team kan brukes til testing på egen telefon med Apples begrensninger; betalt medlemskap er ikke et ubetinget krav for første lokale test.
 4. Koble telefonen til Macen, godkjenn tillit og aktiver Developer Mode når nødvendig. Velg telefonen som run destination.
 5. Legg til mikrofonbegrunnelsen, bygg og kjør. Bruk simulatoren for UI og fysisk iPhone for mikrofon, lydformat, avbrudd og lagring.
@@ -118,7 +118,7 @@ Opprett og del Xcode-prosjektfiler og nødvendige shared schemes i Git. Ikke ver
 - Ugyldige filreferanser avvises, lokal lagringsgrense gir synlig feil, og logger inneholder ikke sensitive opptaksdata.
 - Appen inneholder ingen tjenestenøkler og gjør ingen kall til Key Vault, Azure eller Foundry i lokalversjonen.
 
-Ved implementering brukes målrettede tester av metadata/lagring og tilstandsoverganger, Xcode-build og manuell lydtest på fysisk telefon. Denne dokumentasjonsleveransen krever ingen app-build.
+Lagringskontrollene kjøres med `swift run --package-path front-end/ios/RecordingCore RecordingCoreChecks`. De dekker ikke lydkontrollerens iOS-tilstandsoverganger; disse må kontrolleres med Xcode og fysisk telefon etter kjøreveiledningen. Syntaks-/prosjektkontroll erstatter ikke et fullt iOS-bygg.
 
 ## Git-historikk
 
