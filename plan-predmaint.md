@@ -6,9 +6,17 @@ Systemet skal legge grunnlaget for prediktivt vedlikehold gjennom standardiserte
 
 Prosjektet skal designes for et høyt cyberrisikonivå fra starten. Dette er et konservativt designpremiss, ikke en målt risikoscore eller påstand om konkrete sårbarheter. Konfidensialitet, integritet og tilgjengelighet vurderes før funksjoner aktiveres, ikke som et tillegg etter feltpiloten.
 
-Dette er et designforslag. Avgrensningene nedenfor er bekreftet i intervjuet. Detaljerte tjenestevalg og kontrakter er forslag som skal verifiseres før utvikling. Den lokale iPhone-prototypen er implementert etter separat bestilling; full iOS-build og fysisk telefonverifikasjon gjenstår. Ingen backend er implementert.
+Dette er et designforslag. Avgrensningene nedenfor er bekreftet i intervjuet. Den lokale iPhone-prototypen og et separat lokalt backend-grunnlag er implementert etter egne bestillinger. Full iOS-build og fysisk telefonverifikasjon gjenstår. Ingen Azure-backend er deployet, ingen godkjent Foundry-analyse er aktivert, og appen er ikke koblet til backenden.
 
 Første dokumentasjonsleveranse etablerte `plan-predmaint.md` og `.gitignore`. Repoet har nå `front-end/` og `back-end/`, egen app-plan og lokal prototype under `front-end/ios/`. Se [kjøreveiledning og verifikasjonsstatus](front-end/ios/README.md). Azure-/Foundry-integrasjon krever fortsatt en ny bestilling.
+
+### Bestilt første backendetappe
+
+Etter separat bestilling er backend-grunnlaget skrevet som et lokalt Python/uv-API med FastAPI, SQLite, begrenset WAV-opplasting og validering, Entra-autentisering og Key Vault-klient. Se [backendens omfang, kontrakt og sikkerhetsgrenser](back-end/README.md).
+
+Dette er en avgrenset utviklingsetappe med syntetiske data, ikke en autorisert feltpilot eller Azure-deploy. SDK-integrasjon erstatter ikke etablering og verifikasjon av private endepunkter, RBAC og øvrige vault-kontroller. Lokal lagring er ikke produksjonens lagringsmodell. Foundry-analyse er utilgjengelig til modell- og databehandlingsporten er godkjent.
+
+Backendens arbeidsstrømmer deles mellom API/lagring og identitet/vault, med felles integrasjon og verifikasjon før publisering. De tidligere oppgavene om feltgodkjenning og modellvalidering er fortsatt åpne; de er ikke forutsetninger for å teste lokale kontrakter med syntetiske data.
 
 `plan-predmaint.md` i repoet er hoveddokumentet for designet. Videre avklarte planrevisjoner skal gjøres her, få egne beskrivende commits og pushes til samme feature-branch. Sesjonsplaner er bare arbeids-/godkjenningsartefakter. Repoets `origin` er `https://github.com/arrwno/predmaint.git`; planen publiseres ikke direkte til `main`.
 
@@ -100,7 +108,7 @@ Bruk `uv sync --locked` for å opprette/synkronisere miljøet fra låsefilen, og
 
 ## Git, .gitignore og publisering
 
-Hovedplan, frontend-plan, kildekode og README-filer versjoneres med Git. Den lokale prototypen er implementert; backend er ikke implementert. Lyddata, personlige Xcode-filer og byggeartefakter holdes utenfor Git.
+Hovedplan, frontend-plan, kildekode og README-filer versjoneres med Git. De lokale app-/backendgrunnlagene er implementert; Azure-feltpiloten er ikke det. Lyddata, personlige Xcode-filer og byggeartefakter holdes utenfor Git.
 
 ### Sporbar planutvikling
 
