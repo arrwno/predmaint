@@ -4,15 +4,25 @@
 
 Systemet skal legge grunnlaget for prediktivt vedlikehold gjennom standardiserte lydopptak av togpasseringer, sporbar analyse og faglig vurdering. Første versjon er en datainnsamlings- og avvikspilot, ikke et validert system for feilprediksjon, sikkerhetsvurdering eller beregning av gjenværende levetid.
 
-Dette er et designforslag, ikke en bestilling av implementering. Avgrensningene nedenfor er bekreftet i intervjuet. Detaljerte tjenestevalg og kontrakter er forslag som skal verifiseres før utvikling. Prosjektrepoet inneholder foreløpig bare README og lisens; det finnes ingen eksisterende implementering å tilpasse.
+Dette er et designforslag, ikke en bestilling av implementering. Avgrensningene nedenfor er bekreftet i intervjuet. Detaljerte tjenestevalg og kontrakter er forslag som skal verifiseres før utvikling. Repoet inneholder planer og dokumentasjon, men ingen eksisterende app eller backend å tilpasse.
 
-Den godkjente leveransen er `plan-predmaint.md` og `.gitignore`, med commit og push til sesjonens eksisterende feature-branch på `origin`. App og backend skal ikke implementeres uten en ny bestilling. Python/uv og øvrige implementeringskrav dokumenteres nå og gjennomføres ved senere implementering.
+Første dokumentasjonsleveranse etablerte `plan-predmaint.md` og `.gitignore`. Neste etappe etablerer `front-end/` og `back-end/`, med en egen plan for en lokal opptaksapp. App og backend skal ikke implementeres uten en ny bestilling.
 
 `plan-predmaint.md` i repoet er hoveddokumentet for designet. Videre avklarte planrevisjoner skal gjøres her, få egne beskrivende commits og pushes til samme feature-branch. Sesjonsplaner er bare arbeids-/godkjenningsartefakter. Repoets `origin` er `https://github.com/arrwno/predmaint.git`; planen publiseres ikke direkte til `main`.
 
 Intervjuet bygger på instruksjonene fra Matt Pococks `grill-with-docs`, `grilling` og `domain-modeling`, hentet fra det angitte GitHub-repoet. Disse var ikke tilgjengelige som installerte skills. Instruksjonene er brukt direkte; ingen skill er installert.
 
 ## Bekreftet omfang
+
+### Første etappe: lokal læringsapp
+
+Teamet kjenner Azure og backend, men er nybegynnere på iOS. Vi begynner derfor med en [enkel lokal iPhone-app](front-end/plan-iphone.md): start/stopp, opptaksliste og avspilling, uten innlogging, opplasting, Azure eller Foundry. Opptak skjer bare i forgrunnen, med maks 120 sekunder og WAV-format.
+
+Dette er en forberedende læringsetappe, ikke feltpiloten i tabellen nedenfor. Den endrer ikke langsiktige krav om faglig vurdering, offline-opplasting og godkjent modellbehandling.
+
+Frontend-dokumentasjon ligger i `front-end/`, med senere Xcode-prosjekt under `front-end/ios/`. Python/uv-backend får sitt eget område i `back-end/`. Git versjonerer README-filer og planer slik at begge katalogene er synlige uten tomme plassholdere.
+
+### Langsiktig feltpilot
 
 | Tema | Beslutning |
 |---|---|
@@ -84,7 +94,7 @@ Bruk `uv sync --locked` for å opprette/synkronisere miljøet fra låsefilen, og
 
 ## Git, .gitignore og publisering
 
-Den godkjente dokumentasjonsleveransen er bare to filer: `plan-predmaint.md` og `.gitignore`. Designfilen inkluderer alle bekreftede avgrensninger samt Python/uv, sikkerhetskrav og videre arbeid.
+Dokumentasjonsleveransen inkluderer hovedplanen, frontend-planen, README-filer for begge delene og nødvendige ignore-regler. Ingen app eller backend er implementert. Planene versjoneres og publiseres med Git.
 
 ### Sporbar planutvikling
 
@@ -100,7 +110,7 @@ Fremtidige sesjoner skal lese prosjektfilen og dens Git-historikk før nye revis
 
 `.env.example` kan versjoneres med ufølsomme plassholdere, aldri virkelige nøkler. `uv.lock`, `pyproject.toml`, eventuell `.python-version`, kildekode og dokumentasjon skal ikke ignoreres. En `.gitignore` er ikke en sikkerhetsgrense og fjerner ikke data som allerede er sporet av Git.
 
-Før commit kontrolleres status og diff for utilsiktede filer, personopplysninger og hemmeligheter. Stage bare de to bestilte filene med eksplisitte filnavn. Commit inkluderer påkrevd Copilot-medforfattertrailer. Push skjer med upstream til sesjonens eksisterende feature-branch på `origin`; branchnavn leses fra Git ved utførelse. Ingen force-push, branch-endring, push til `main` eller automatisk PR-opprettelse.
+Før commit kontrolleres status og diff for utilsiktede filer, personopplysninger og hemmeligheter. Stage bare bestilte filer med eksplisitte filnavn. Commit inkluderer påkrevd Copilot-medforfattertrailer. Push skjer til sesjonens eksisterende feature-branch på `origin`; branchnavn leses fra Git ved utførelse. Ingen force-push, branch-endring, push til `main` eller automatisk PR-opprettelse.
 
 Etter push verifiseres at fjernbranchens commit-ID samsvarer med den lokale committen. Ved avvist push, manglende tilgang eller nettfeil rapporteres blokkeringen uten å hevde at publisering lyktes. Ikke endre GitHub- eller branch-beskyttelse for å omgå feil.
 

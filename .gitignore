@@ -24,6 +24,8 @@ dist/
 /local-data/
 /recordings/
 /datasets/
+/front-end/local-data/
+/back-end/local-data/
 
 # Local logs and development tooling
 *.log
