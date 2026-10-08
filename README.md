@@ -9,6 +9,6 @@ Et system for prediktivt vedlikehold på jernbanen ved hjelp av akustikk.
 - [Plan for første iPhone-app](front-end/plan-iphone.md): lokale lydopptak og avspilling, med nybegynnerveiledning.
 - [Kjøreveiledning for iPhone-prototypen](front-end/ios/README.md): Xcode-oppsett, lagringskontroller og gjenstående telefonverifikasjon.
 - [Plan for repo-struktur og første lokale iPhone-app](front-end/plan-repo-struktur-og-iphone.md): samlet, godkjent planleggingsgrunnlag for dokumentasjonsleveransen.
-- [Backend](back-end/README.md): senere Python/uv-backend i Azure.
+- [Backend](back-end/README.md): lokalt Python/uv-API, Entra-autentisering og Key Vault-klient; senere Azure-feltpilot.
 
-Første etappe er en lokal læringsapp uten Azure, innlogging eller opplasting. Repoet inneholder en iPhone-prototype, planer og dokumentasjon, men ingen implementert backend. Fullt iOS-bygg og fysisk telefonverifikasjon gjenstår; se kjøreveiledningen. Planrevisjoner versjoneres med Git.
+Repoet inneholder en lokal iPhone-prototype og et separat lokalt backend-grunnlag for syntetiske opptak. iPhone-appen er ikke koblet til backenden. Fullt iOS-bygg og fysisk telefonverifikasjon gjenstår; se kjøreveiledningen. Ingen Azure-ressurser er deployet, og ingen Foundry-analyse utføres. Planrevisjoner versjoneres med Git.
